@@ -1,0 +1,56 @@
+<?php
+use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\AuditLogController;
+use App\Http\Controllers\BatchController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\ExpiryDateController;
+use App\Http\Controllers\InventoryAdjustmentController;
+use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\LeaveController;
+use App\Http\Controllers\LeaveTypeController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\PaymentMethodController;
+use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\PromotionController;
+use App\Http\Controllers\PurchaseController;
+use App\Http\Controllers\PurchaseItemController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\SaleController;
+use App\Http\Controllers\SaleItemController;
+use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\TaxRateController;
+use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\UserController;
+use Illuminate\Support\Facades\Route;
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::apiResource('users', UserController::class);
+    Route::apiResource('customers', CustomerController::class);
+    Route::apiResource('categories', CategoryController::class);
+    Route::apiResource('tax_rates', TaxRateController::class);
+    Route::apiResource('products', ProductController::class);
+    Route::apiResource('promotions', PromotionController::class);
+    Route::apiResource('inventories', InventoryController::class);
+    Route::apiResource('inventory_adjustments', InventoryAdjustmentController::class);
+    Route::apiResource('suppliers', SupplierController::class);
+    Route::apiResource('purchases', PurchaseController::class);
+    Route::apiResource('purchase_items', PurchaseItemController::class);
+    Route::apiResource('sales', SaleController::class);
+    Route::apiResource('sale_items', SaleItemController::class);
+    Route::apiResource('transactions', TransactionController::class);
+    Route::apiResource('payment_methods', PaymentMethodController::class);
+    Route::apiResource('payments', PaymentController::class);
+    Route::apiResource('roles', RoleController::class);
+    Route::apiResource('permissions', PermissionController::class);
+    Route::apiResource('reports', ReportController::class);
+    Route::apiResource('audit_logs', AuditLogController::class);
+    Route::apiResource('batches', BatchController::class);
+    Route::apiResource('expiry_dates', ExpiryDateController::class);
+    Route::apiResource('attendances', AttendanceController::class);
+    Route::apiResource('leave_types', LeaveTypeController::class);
+    Route::apiResource('leaves', LeaveController::class);
+});
+
