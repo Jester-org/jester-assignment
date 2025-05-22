@@ -43,9 +43,9 @@ Route::get('/', function () {
     return redirect()->route('dashboard');
 });
 
-Route::get('/home', [DashboardController::class, 'index'])->middleware(['auth', 'admin'])->name('dashboard');
+Route::get('/home', [DashboardController::class, 'index'])->middleware(['auth'])->name('dashboard');
 
-Route::middleware(['auth', 'admin'])->group(function () {
+Route::middleware(['auth'])->group(function () {
     Route::resource('users', UserController::class);
     Route::resource('customers', CustomerController::class);
     Route::resource('categories', CategoryController::class);

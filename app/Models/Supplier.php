@@ -26,4 +26,14 @@ class Supplier extends Model
         return $this->belongsToMany(Product::class, 'product_supplier')
                    ->withTimestamps();
     }
+
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class);
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
 }

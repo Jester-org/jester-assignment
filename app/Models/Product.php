@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -43,9 +44,29 @@ class Product extends Model
         return $this->hasMany(Batch::class);
     }
 
+    public function expiryDates()
+    {
+        return $this->hasMany(ExpiryDate::class);
+    }
+
     public function suppliers()
     {
         return $this->belongsToMany(Supplier::class, 'product_supplier')
-                   ->withTimestamps();
+                    ->withTimestamps();
+    }
+
+    public function saleItems()
+    {
+        return $this->hasMany(SaleItem::class);
+    }
+
+    public function purchaseItems()
+    {
+        return $this->hasMany(PurchaseItem::class);
+    }
+
+    public function inventoryAdjustments()
+    {
+        return $this->hasMany(InventoryAdjustment::class);
     }
 }
