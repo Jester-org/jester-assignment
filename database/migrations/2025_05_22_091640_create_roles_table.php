@@ -10,6 +10,7 @@ return new class extends Migration
             $table->id();
             $table->string('name')->unique();
             $table->string('guard_name');
+            $table->text('description')->nullable();
             $table->timestamps();
         });
     }

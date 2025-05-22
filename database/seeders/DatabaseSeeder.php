@@ -22,8 +22,6 @@ class DatabaseSeeder extends Seeder
             TransactionSeeder::class,
             PaymentMethodSeeder::class,
             PaymentSeeder::class,
-            RoleSeeder::class,
-            PermissionSeeder::class,
             ReportSeeder::class,
             AuditLogSeeder::class,
             BatchSeeder::class,
@@ -31,6 +29,8 @@ class DatabaseSeeder extends Seeder
             AttendanceSeeder::class,
             LeaveTypeSeeder::class,
             LeaveSeeder::class,
+            RoleSeeder::class,
+            PermissionSeeder::class,
         ]);
     }
 }

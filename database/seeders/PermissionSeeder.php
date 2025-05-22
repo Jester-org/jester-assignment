@@ -1,17 +1,13 @@
 <?php
 namespace Database\Seeders;
-use App\Models\Permission;
-use App\Models\Role;
+
 use Illuminate\Database\Seeder;
+use Database\Factories\PermissionFactory;
+
 class PermissionSeeder extends Seeder
 {
     public function run(): void
     {
-        Permission::factory()->create([
-            'name' => 'something',
-            'description' => 'something',
-            'guard_name' => 'web', // ✅ This line fixes the error
-        ]);            
-    }  
+        PermissionFactory::new()->count(5)->create();
+    }
 }
-

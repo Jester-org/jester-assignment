@@ -9,9 +9,6 @@
         <thead>
             <tr>
                 <th>Name</th>
-                <th>Description</th>
-                <th>Permissions</th>
-                <th>Users</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -19,9 +16,6 @@
             @foreach ($roles as $role)
                 <tr>
                     <td>{{ $role->name }}</td>
-                    <td>{{ $role->description ?? 'N/A' }}</td>
-                    <td>{{ $role->permissions->pluck('name')->join(', ') ?: 'None' }}</td>
-                    <td>{{ $role->users->pluck('name')->join(', ') ?: 'None' }}</td>
                     <td>
                         <a href="{{ route('roles.show', $role) }}" class="btn btn-info">Show</a>
                         <a href="{{ route('roles.edit', $role) }}" class="btn btn-warning">Edit</a>

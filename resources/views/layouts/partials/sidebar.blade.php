@@ -157,7 +157,7 @@
     }
 
     .sidebar ul li.open .submenu {
-        max-height: 200px;
+        max-height: none;
         opacity: 1;
         transform: translateY(0);
     }

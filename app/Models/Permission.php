@@ -1,14 +1,15 @@
 <?php
 namespace App\Models;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-class Permission extends Model
+
+use Spatie\Permission\Models\Permission as SpatiePermission;
+use Database\Factories\PermissionFactory;
+
+class Permission extends SpatiePermission
 {
-    use HasFactory;
-    protected $fillable = ['name', 'description'];
-    public function roles()
+    protected $fillable = ['name', 'description', 'guard_name'];
+
+    protected static function newFactory()
     {
-        return $this->belongsToMany(Role::class);
+        return PermissionFactory::new();
     }
 }
-
