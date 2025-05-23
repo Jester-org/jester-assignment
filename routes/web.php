@@ -58,6 +58,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('purchases', PurchaseController::class);
     Route::resource('purchase-items', PurchaseItemController::class);
     Route::resource('sales', SaleController::class);
+    Route::post('/sales/check-stock', [SaleController::class, 'checkStock'])->name('sales.check-stock');
     Route::resource('sale-items', SaleItemController::class);
     Route::resource('transactions', TransactionController::class);
     Route::resource('payment-methods', PaymentMethodController::class);

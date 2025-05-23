@@ -35,7 +35,7 @@
                 <li><a href="/inventories" class="{{ Request::is('inventories*') ? 'active' : '' }}"><i class="fas fa-warehouse"></i> Inventories</a></li>
                 <li><a href="/inventory-adjustments" class="{{ Request::is('inventory-adjustments*') ? 'active' : '' }}"><i class="fas fa-tools"></i> Inventory Adjustments</a></li>
                 <li><a href="/batches" class="{{ Request::is('batches*') ? 'active' : '' }}"><i class="fas fa-cubes"></i> Batches</a></li>
-                <li><a href="/expiry_dates" class="{{ Request::is('expiry_dates*') ? 'active' : '' }}"><i class="fas fa-clock"></i> Expiry Dates</a></li>
+                <li><a href="/expiry-dates" class="{{ Request::is('expiry-dates*') ? 'active' : '' }}"><i class="fas fa-clock"></i> Expiry Dates</a></li>
             </ul>
         </li>
         <li>
