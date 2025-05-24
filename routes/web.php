@@ -1,32 +1,33 @@
 <?php
-use App\Http\Controllers\AttendanceController;
-use App\Http\Controllers\AuditLogController;
-use App\Http\Controllers\BatchController;
-use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\CustomerController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\ExpiryDateController;
-use App\Http\Controllers\InventoryAdjustmentController;
-use App\Http\Controllers\InventoryController;
-use App\Http\Controllers\LeaveController;
-use App\Http\Controllers\LeaveTypeController;
-use App\Http\Controllers\PaymentController;
-use App\Http\Controllers\PaymentMethodController;
-use App\Http\Controllers\PermissionController;
-use App\Http\Controllers\ProductController;
-use App\Http\Controllers\PromotionController;
-use App\Http\Controllers\PurchaseController;
-use App\Http\Controllers\PurchaseItemController;
-use App\Http\Controllers\ReportController;
-use App\Http\Controllers\RoleController;
-use App\Http\Controllers\SaleController;
-use App\Http\Controllers\SaleItemController;
-use App\Http\Controllers\SupplierController;
-use App\Http\Controllers\TaxRateController;
-use App\Http\Controllers\TransactionController;
-use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\SaleController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\BatchController;
+use App\Http\Controllers\LeaveController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\TaxRateController;
+use App\Http\Controllers\AuditLogController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\PurchaseController;
+use App\Http\Controllers\SaleItemController;
+use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\LeaveTypeController;
+use App\Http\Controllers\PromotionController;
+use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\ExpiryDateController;
+use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\PurchaseItemController;
+use App\Http\Controllers\PaymentMethodController;
+use App\Http\Controllers\InventoryAdjustmentController;
 
 Route::get('/debug-roles', function () {
     if (Auth::check()) {
@@ -43,7 +44,7 @@ Route::get('/', function () {
     return redirect()->route('dashboard');
 });
 
-Route::get('/home', [DashboardController::class, 'index'])->middleware(['auth'])->name('dashboard');
+Route::get('/home', [HomeController::class, 'index'])->middleware(['auth'])->name('dashboard');
 
 Route::middleware(['auth'])->group(function () {
     Route::resource('users', UserController::class);
