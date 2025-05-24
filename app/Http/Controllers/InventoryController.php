@@ -3,6 +3,7 @@ namespace App\Http\Controllers;
 use App\Models\Inventory;
 use App\Models\Product;
 use Illuminate\Http\Request;
+
 class InventoryController extends Controller
 {
     public function index(Request $request)
@@ -13,11 +14,13 @@ class InventoryController extends Controller
         }
         return view('inventory.index', compact('inventories'));
     }
+
     public function create()
     {
         $products = Product::all();
         return view('inventory.create', compact('products'));
     }
+
     public function store(Request $request)
     {
         $request->validate([
@@ -31,6 +34,7 @@ class InventoryController extends Controller
         }
         return redirect()->route('inventories.index');
     }
+
     public function show(Request $request, Inventory $inventory)
     {
         $inventory->load('product');
@@ -39,11 +43,13 @@ class InventoryController extends Controller
         }
         return view('inventory.show', compact('inventory'));
     }
+
     public function edit(Inventory $inventory)
     {
         $products = Product::all();
         return view('inventory.edit', compact('inventory', 'products'));
     }
+
     public function update(Request $request, Inventory $inventory)
     {
         $request->validate([
@@ -57,6 +63,7 @@ class InventoryController extends Controller
         }
         return redirect()->route('inventories.index');
     }
+
     public function destroy(Request $request, Inventory $inventory)
     {
         $inventory->delete();
@@ -66,4 +73,3 @@ class InventoryController extends Controller
         return redirect()->route('inventories.index');
     }
 }
-

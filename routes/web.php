@@ -56,6 +56,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('inventory-adjustments', InventoryAdjustmentController::class);
     Route::resource('suppliers', SupplierController::class);
     Route::resource('purchases', PurchaseController::class);
+    Route::post('/purchases/check-product', [App\Http\Controllers\PurchaseController::class, 'checkProduct'])->name('purchases.check-product');
     Route::resource('purchase-items', PurchaseItemController::class);
     Route::resource('sales', SaleController::class);
     Route::post('/sales/check-stock', [SaleController::class, 'checkStock'])->name('sales.check-stock');

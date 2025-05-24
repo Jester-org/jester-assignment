@@ -28,23 +28,33 @@ class InventoryAdjustmentController extends Controller
         $request->validate([
             'inventory_id' => 'required|exists:inventories,id',
             'adjustment_type' => 'required|in:addition,reduction',
-            'quantity' => 'required|integer|min:1',
+            'quantity' => 'required|integer',
             'reason' => 'nullable|string',
             'adjustment_date' => 'required|date',
         ]);
 
-        DB::transaction(function () use ($request) {
+        $inventoryAdjustment = DB::transaction(function () use ($request) {
             $inventory = Inventory::findOrFail($request->inventory_id);
-            if ($request->adjustment_type === 'reduction' && $inventory->quantity < $request->quantity) {
+            
+            // Validate stock for reduction
+            if ($request->adjustment_type === 'reduction' && $inventory->quantity < abs($request->quantity)) {
                 throw new \Exception("Insufficient stock for reduction. Available: {$inventory->quantity}.");
             }
 
-            $inventoryAdjustment = InventoryAdjustment::create($request->all());
-
-            // Update inventory
+            // Apply adjustment
             $inventory->quantity += ($request->adjustment_type === 'addition' ? $request->quantity : -$request->quantity);
             $inventory->last_updated = now();
             $inventory->save();
+
+            // Create adjustment record
+            return InventoryAdjustment::create([
+                'inventory_id' => $request->inventory_id,
+                'user_id' => auth()->id(),
+                'adjustment_type' => $request->adjustment_type,
+                'quantity' => $request->quantity,
+                'reason' => $request->reason,
+                'adjustment_date' => $request->adjustment_date,
+            ]);
         });
 
         if ($request->expectsJson()) {
@@ -73,28 +83,38 @@ class InventoryAdjustmentController extends Controller
         $request->validate([
             'inventory_id' => 'required|exists:inventories,id',
             'adjustment_type' => 'required|in:addition,reduction',
-            'quantity' => 'required|integer|min:1',
+            'quantity' => 'required|integer',
             'reason' => 'nullable|string',
             'adjustment_date' => 'required|date',
         ]);
 
-        DB::transaction(function () use ($request, $inventoryAdjustment) {
-            $inventory = Inventory::findOrFail($request->inventory_id);
+        $inventoryAdjustment = DB::transaction(function () use ($request, $inventoryAdjustment) {
+            $inventory = Inventory::findOrFail($inventoryAdjustment->inventory_id);
 
             // Revert previous adjustment
             $inventory->quantity += ($inventoryAdjustment->adjustment_type === 'addition' ? -$inventoryAdjustment->quantity : $inventoryAdjustment->quantity);
 
             // Validate new adjustment
-            if ($request->adjustment_type === 'reduction' && $inventory->quantity < $request->quantity) {
+            if ($request->adjustment_type === 'reduction' && $inventory->quantity < abs($request->quantity)) {
                 throw new \Exception("Insufficient stock for reduction. Available: {$inventory->quantity}.");
             }
-
-            $inventoryAdjustment->update($request->all());
 
             // Apply new adjustment
             $inventory->quantity += ($request->adjustment_type === 'addition' ? $request->quantity : -$request->quantity);
             $inventory->last_updated = now();
             $inventory->save();
+
+            // Update adjustment record
+            $inventoryAdjustment->update([
+                'inventory_id' => $request->inventory_id,
+                'user_id' => auth()->id(),
+                'adjustment_type' => $request->adjustment_type,
+                'quantity' => $request->quantity,
+                'reason' => $request->reason,
+                'adjustment_date' => $request->adjustment_date,
+            ]);
+
+            return $inventoryAdjustment;
         });
 
         if ($request->expectsJson()) {
@@ -119,5 +139,22 @@ class InventoryAdjustmentController extends Controller
             return response()->json(null, 204);
         }
         return redirect()->route('inventory-adjustments.index')->with('success', 'Adjustment deleted successfully.');
+    }
+
+    public function checkStock(Request $request)
+    {
+        $request->validate([
+            'inventory_id' => 'required|exists:inventories,id',
+            'quantity' => 'required|integer|min:0',
+        ]);
+
+        $inventory = Inventory::findOrFail($request->inventory_id);
+        $available = $inventory->quantity;
+
+        if ($available < $request->quantity) {
+            return response()->json(['error' => "Insufficient stock. Available: $available."], 422);
+        }
+
+        return response()->json(['success' => true, 'available' => $available]);
     }
 }
