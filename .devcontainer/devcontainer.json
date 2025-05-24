@@ -1,0 +1,31 @@
+{
+    "name": "Laravel Development Environment",
+    "image": "mcr.microsoft.com/devcontainers/php:8.2",
+    "features": {
+        "ghcr.io/devcontainers/features/composer:2": {},
+        "ghcr.io/devcontainers/features/node:1": {}
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "bmewburn.vscode-intelephense-client",
+                "xdebug.php-debug",
+                "editorconfig.editorconfig",
+                "dbaeumer.vscode-eslint"
+            ],
+            "settings": {
+                "php.executablePath": "/usr/local/bin/php",
+                "php.version": "8.2"
+            }
+        }
+    },
+    "postCreateCommand": "composer install && php artisan key:generate && touch database/database.sqlite && chmod 775 database/database.sqlite && php artisan migrate --seed",
+    "forwardPorts": [8000],
+    "portsAttributes": {
+        "8000": {
+            "label": "Laravel Server",
+            "onAutoForward": "openPreview"
+        }
+    },
+    "remoteUser": "vscode"
+}
