@@ -7,20 +7,25 @@ use App\Models\TaxRate;
 use App\Models\Supplier;
 use App\Models\Inventory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class ProductController extends Controller
 {
     public function index(Request $request)
     {
         $products = Product::with([
-                'category', 
-                'taxRate', 
-                'inventory', 
-                'suppliers'
+                'category',
+                'taxRate',
+                'inventory',
+                'suppliers',
+                'promotions'
             ])
-            ->get()
-            ->map(function ($product) {
-                $product->low_stock = optional($product->inventory)->quantity <= $product->reorder_threshold;
+            ->paginate(10)
+            ->through(function ($product) {
+                $product->low_stock = $product->inventory
+                    ? $product->inventory->quantity <= $product->reorder_threshold
+                    : true;
+                $product->stock_quantity = $product->inventory ? $product->inventory->quantity : 0;
                 return $product;
             });
 
@@ -33,11 +38,13 @@ class ProductController extends Controller
 
     public function create()
     {
-        return view('product.create', [
-            'categories' => Category::all(),
-            'taxRates' => TaxRate::all(),
-            'suppliers' => Supplier::all()
-        ]);
+        $categories = Category::all();
+        $taxRates = TaxRate::all()->map(function ($taxRate) {
+            $taxRate->display_name = "{$taxRate->name} ({$taxRate->rate}%)";
+            return $taxRate;
+        });
+
+        return view('product.create', compact('categories', 'taxRates'));
     }
 
     public function store(Request $request)
@@ -47,21 +54,23 @@ class ProductController extends Controller
             'tax_rate_id' => 'required|exists:tax_rates,id',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'barcode' => 'required|string|max:255|unique:products',
-            'unit_price' => 'required|numeric|min:0',
+            'base_price' => 'required|numeric|min:0',
             'reorder_threshold' => 'required|integer|min:0',
-            'supplier_ids' => 'nullable|array',
-            'supplier_ids.*' => 'exists:suppliers,id',
         ]);
+
+        $taxRate = TaxRate::findOrFail($validated['tax_rate_id']);
+        $basePrice = $validated['base_price'];
+        $validated['vat'] = $basePrice * ($taxRate->rate / 100);
+        $validated['unit_price'] = $basePrice + $validated['vat'];
 
         $product = Product::create($validated);
 
-        if ($request->has('supplier_ids')) {
-            $product->suppliers()->attach($validated['supplier_ids']);
-        }
+        // Apply any applicable promotions
+        $discountedPrice = $product->calculateDiscountedPrice();
+        $product->update(['unit_price' => $discountedPrice + $product->vat]);
 
         if ($request->expectsJson()) {
-            return response()->json($product->load('suppliers'), 201);
+            return response()->json($product->load('inventory', 'suppliers'), 201);
         }
 
         return redirect()->route('products.index')->with('success', 'Product created successfully');
@@ -69,8 +78,11 @@ class ProductController extends Controller
 
     public function show(Request $request, Product $product)
     {
-        $product->load(['category', 'taxRate', 'inventory', 'suppliers']);
-        $product->low_stock = optional($product->inventory)->quantity <= $product->reorder_threshold;
+        $product->load(['category', 'taxRate', 'inventory', 'suppliers', 'promotions']);
+        $product->low_stock = $product->inventory
+            ? $product->inventory->quantity <= $product->reorder_threshold
+            : true;
+        $product->stock_quantity = $product->inventory ? $product->inventory->quantity : 0;
 
         if ($request->expectsJson()) {
             return response()->json($product);
@@ -81,12 +93,15 @@ class ProductController extends Controller
 
     public function edit(Product $product)
     {
-        return view('product.edit', [
-            'product' => $product->load('suppliers'),
-            'categories' => Category::all(),
-            'taxRates' => TaxRate::all(),
-            'suppliers' => Supplier::all()
-        ]);
+        $categories = Category::all();
+        $taxRates = TaxRate::all()->map(function ($taxRate) {
+            $taxRate->display_name = "{$taxRate->name} ({$taxRate->rate}%)";
+            return $taxRate;
+        });
+
+        $product->load(['category', 'taxRate']);
+
+        return view('product.edit', compact('product', 'categories', 'taxRates'));
     }
 
     public function update(Request $request, Product $product)
@@ -96,18 +111,34 @@ class ProductController extends Controller
             'tax_rate_id' => 'required|exists:tax_rates,id',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'barcode' => 'required|string|max:255|unique:products,barcode,' . $product->id,
-            'unit_price' => 'required|numeric|min:0',
+            'sku' => 'nullable|string|max:255|unique:products,sku,' . $product->id,
+            'base_price' => 'required|numeric|min:0',
             'reorder_threshold' => 'required|integer|min:0',
-            'supplier_ids' => 'nullable|array',
-            'supplier_ids.*' => 'exists:suppliers,id',
+        ]);
+
+        $taxRate = TaxRate::findOrFail($validated['tax_rate_id']);
+        $validated['vat'] = $validated['base_price'] * ($taxRate->rate / 100);
+        $validated['unit_price'] = $validated['base_price'] + $validated['vat'];
+
+        Log::info('Updating product', [
+            'id' => $product->id,
+            'validated' => $validated
         ]);
 
         $product->update($validated);
-        $product->suppliers()->sync($validated['supplier_ids'] ?? []);
+
+        // Reapply promotions
+        $discountedPrice = $product->calculateDiscountedPrice();
+        $product->update(['unit_price' => $discountedPrice + $product->vat]);
+
+        Log::info('Product updated', [
+            'id' => $product->id,
+            'vat' => $product->vat,
+            'unit_price' => $product->unit_price
+        ]);
 
         if ($request->expectsJson()) {
-            return response()->json($product->load('suppliers'));
+            return response()->json($product->load('inventory', 'suppliers'));
         }
 
         return redirect()->route('products.index')->with('success', 'Product updated successfully');

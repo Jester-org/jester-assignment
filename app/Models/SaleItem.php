@@ -21,8 +21,7 @@ class SaleItem extends Model
         'quantity',
         'unit_price',
         'subtotal',
-        'tax_rate_id',
-        'promotion_id',
+        'discount',
     ];
 
     public function sale()

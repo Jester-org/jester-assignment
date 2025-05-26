@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -9,27 +10,33 @@ class Promotion extends Model
     use HasFactory;
 
     protected $fillable = [
-        'product_id',             // single product
-        'discount_percentage',
+        'type',
+        'discount_type',
+        'discount_value',
+        'free_item_id',
         'start_date',
         'end_date',
+        'is_active',
     ];
 
-    // Single product relation
-    public function product()
-    {
-        return $this->belongsTo(Product::class);
-    }
+    protected $casts = [
+        'start_date' => 'date',
+        'end_date' => 'date',
+        'is_active' => 'boolean',
+    ];
 
-    // Many-to-many products
     public function products()
     {
-        return $this->belongsToMany(Product::class, 'product_promotion')->withTimestamps();
+        return $this->morphedByMany(Product::class, 'promotable', 'promotable');
     }
 
-    // Many-to-many categories
     public function categories()
     {
-        return $this->belongsToMany(Category::class, 'category_promotion')->withTimestamps();
+        return $this->morphedByMany(Category::class, 'promotable', 'promotable');
+    }
+
+    public function freeItem()
+    {
+        return $this->belongsTo(Product::class, 'free_item_id');
     }
 }

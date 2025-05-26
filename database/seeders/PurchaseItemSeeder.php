@@ -6,7 +6,7 @@ class PurchaseItemSeeder extends Seeder
 {
     public function run(): void
     {
-        PurchaseItem::factory()->count(5)->create();
+        PurchaseItem::factory()->count(1)->create();
     }
 }
 

@@ -6,7 +6,7 @@ class InventoryAdjustmentSeeder extends Seeder
 {
     public function run(): void
     {
-        InventoryAdjustment::factory()->count(5)->create();
+        InventoryAdjustment::factory()->count(1)->create();
     }
 }
 

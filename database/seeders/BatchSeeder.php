@@ -6,7 +6,7 @@ class BatchSeeder extends Seeder
 {
     public function run(): void
     {
-        Batch::factory()->count(5)->create();
+        Batch::factory()->count(1)->create();
     }
 }
 

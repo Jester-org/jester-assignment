@@ -6,7 +6,7 @@ class ExpiryDateSeeder extends Seeder
 {
     public function run(): void
     {
-        ExpiryDate::factory()->count(5)->create();
+        ExpiryDate::factory()->count(1)->create();
     }
 }
 

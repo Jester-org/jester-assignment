@@ -14,10 +14,14 @@ class Product extends Model
         'tax_rate_id',
         'name',
         'description',
-        'barcode',
+        'sku',
+        'base_price',
+        'vat',
         'unit_price',
-        'reorder_threshold'
+        'reorder_threshold',
     ];
+
+    protected $appends = ['promotion_details'];
 
     public function category()
     {
@@ -29,44 +33,81 @@ class Product extends Model
         return $this->belongsTo(TaxRate::class);
     }
 
-    public function promotions()
-    {
-        return $this->belongsToMany(Promotion::class);
-    }
-
     public function inventory()
     {
         return $this->hasOne(Inventory::class);
     }
 
-    public function batches()
-    {
-        return $this->hasMany(Batch::class);
-    }
-
-    public function expiryDates()
-    {
-        return $this->hasMany(ExpiryDate::class);
-    }
-
     public function suppliers()
     {
-        return $this->belongsToMany(Supplier::class, 'product_supplier')
-                    ->withTimestamps();
+        return $this->belongsToMany(Supplier::class);
     }
 
-    public function saleItems()
+    public function promotions()
     {
-        return $this->hasMany(SaleItem::class);
+        return $this->morphToMany(Promotion::class, 'promotable', 'promotable');
     }
 
-    public function purchaseItems()
+    public function getApplicablePromotions()
     {
-        return $this->hasMany(PurchaseItem::class);
+        $today = now()->startOfDay();
+        $productPromotions = $this->promotions()
+            ->where('is_active', true)
+            ->where('start_date', '<=', $today)
+            ->where('end_date', '>=', $today)
+            ->get();
+
+        $categoryPromotions = Promotion::whereHas('categories', function ($query) {
+            $query->where('categories.id', $this->category_id);
+        })
+            ->where('is_active', true)
+            ->where('start_date', '<=', $today)
+            ->where('end_date', '>=', $today)
+            ->get();
+
+        return $productPromotions->merge($categoryPromotions)->sortByDesc(function ($promotion) {
+            return $promotion->products()->where('products.id', $this->id)->exists() ? 1 : 0;
+        });
     }
 
-    public function inventoryAdjustments()
+    public function calculateDiscountedPrice()
     {
-        return $this->hasMany(InventoryAdjustment::class);
+        $promotions = $this->getApplicablePromotions();
+        $price = $this->base_price;
+
+        foreach ($promotions as $promotion) {
+            if ($promotion->type === 'discount' && $promotion->is_active) {
+                if ($promotion->discount_type === 'fixed') {
+                    $price = max(0, $price - $promotion->discount_value);
+                } elseif ($promotion->discount_type === 'percentage') {
+                    $price = max(0, $price * (1 - $promotion->discount_value / 100));
+                }
+            }
+        }
+
+        return $price;
+    }
+
+    public function getPromotionDetailsAttribute()
+    {
+        $promotions = $this->getApplicablePromotions();
+        if ($promotions->isEmpty()) {
+            return 'No active promotions';
+        }
+
+        $details = [];
+        foreach ($promotions as $promotion) {
+            if ($promotion->type === 'discount') {
+                $discount = $promotion->discount_type === 'fixed'
+                    ? 'Fixed: $' . number_format($promotion->discount_value, 2)
+                    : $promotion->discount_value . '%';
+                $details[] = "Discount: $discount (Active until {$promotion->end_date->format('Y-m-d')})";
+            } else {
+                $freeItem = $promotion->freeItem->name ?? 'N/A';
+                $details[] = "Buy and Get Free: $freeItem (Active until {$promotion->end_date->format('Y-m-d')})";
+            }
+        }
+
+        return implode('; ', $details);
     }
 }

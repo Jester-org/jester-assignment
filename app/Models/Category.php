@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -17,6 +18,6 @@ class Category extends Model
 
     public function promotions()
     {
-        return $this->belongsToMany(Promotion::class, 'category_promotion')->withTimestamps();
+        return $this->morphToMany(Promotion::class, 'promotable', 'promotable');
     }
 }

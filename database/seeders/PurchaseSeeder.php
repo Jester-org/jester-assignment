@@ -11,7 +11,7 @@ class PurchaseSeeder extends Seeder
     {
         Purchase::factory()
             ->count(10)
-            ->has(PurchaseItem::factory()->count(3))
+            ->has(PurchaseItem::factory()->count(1))
             ->create();
     }
 }

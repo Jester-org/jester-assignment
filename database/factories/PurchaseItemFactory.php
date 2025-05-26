@@ -17,6 +17,7 @@ class PurchaseItemFactory extends Factory
             'quantity' => $quantity,
             'unit_price' => $unit_price,
             'subtotal' => $quantity * $unit_price,
+            'apply_tax' => $this->faker->boolean,
         ];
     }
 }
