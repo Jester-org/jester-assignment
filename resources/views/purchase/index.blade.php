@@ -3,11 +3,27 @@
 @section('title', 'Purchase Index')
 
 @push('styles')
+    <style>
+        .alert { margin-bottom: 1rem; padding: 1rem; border-radius: 0.25rem; }
+        .alert-success { background-color: #d4edda; border-color: #c3e6cb; color: #155724; }
+        .alert-danger { background-color: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+    </style>
 @endpush
 
 @section('content')
     <h1>Purchases</h1>
     <a href="{{ route('purchases.create') }}" class="btn btn-primary mb-3">Create Purchase</a>
+
+    @if (session('success'))
+        <div class="alert alert-success">
+            {{ session('success') }}
+        </div>
+    @endif
+    @if (session('error'))
+        <div class="alert alert-danger">
+            {{ session('error') }}
+        </div>
+    @endif
 
     <table class="table table-bordered table-striped">
         <thead>
@@ -17,7 +33,7 @@
                 <th>Total Amount</th>
                 <th>Status</th>
                 <th>Items Count</th>
-                <th>Products</th> <!-- New column -->
+                <th>Products</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -37,7 +53,7 @@
                     <td>
                         <a href="{{ route('purchases.show', $purchase) }}" class="btn btn-info btn-sm">Show</a>
                         <a href="{{ route('purchases.edit', $purchase) }}" class="btn btn-warning btn-sm">Edit</a>
-                        <form action="{{ route('purchases.destroy', $purchase) }}" method="POST" style="display:inline;">
+                        <form id="delete-form-{{ $purchase->id }}" action="{{ route('purchases.destroy', $purchase) }}" method="POST" style="display:inline;">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="btn btn-danger btn-sm"

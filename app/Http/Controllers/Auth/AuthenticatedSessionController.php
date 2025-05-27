@@ -34,7 +34,11 @@ class AuthenticatedSessionController extends Controller
 
         if (Auth::attempt($request->only('username', 'password'), $request->boolean('remember'))) {
             $request->session()->regenerate();
-            request()->session()->put('name', request()->input('username'));
+            $user = Auth::user();
+            $request->session()->put([
+                'ID' => $user->id,
+                'NAME' => $user->name,
+            ]);
             return redirect()->intended(RouteServiceProvider::HOME);
         }
 

@@ -41,6 +41,20 @@
             @enderror
         </div>
         <div class="mb-3">
+            <label for="payment_method_id" class="form-label">Payment Method</label>
+            <select name="payment_method_id" id="payment_method_id" class="form-control">
+                <option value="">Select Payment Method</option>
+                @forelse ($paymentMethods as $paymentMethod)
+                    <option value="{{ $paymentMethod->id }}" {{ $sale->payment_method_id == $paymentMethod->id ? 'selected' : '' }}>{{ $paymentMethod->name }}</option>
+                @empty
+                    <option value="">No payment methods available</option>
+                @endforelse
+            </select>
+            @error('payment_method_id')
+                <div class="text-danger">{{ $message }}</div>
+            @enderror
+        </div>
+        <div class="mb-3">
             <label for="total_amount" class="form-label">Total Amount</label>
             <input type="number" name="total_amount" id="total_amount" class="form-control" step="0.01" min="0" readonly>
             @error('total_amount')
@@ -49,7 +63,7 @@
         </div>
         <div class="mb-3">
             <label for="sale_date" class="form-label">Sale Date</label>
-            <input type="date" name="sale_date" id="sale_date" class="form-control" value="{{ $sale->sale_date }}" required>
+            <input type="date" name="sale_date" id="sale_date" class="form-control" value="{{ $sale->sale_date->format('Y-m-d') }}" required>
             @error('sale_date')
                 <div class="text-danger">{{ $message }}</div>
             @enderror
@@ -97,15 +111,15 @@
                             @enderror
                         </td>
                         <td>
-                            <input type="number" name="sale_items[{{ $index }}][discount]" class="form-control discount-input" step="0.01" min="0" value="0">
+                            <input type="number" name="sale_items[{{ $index }}][discount]" class="form-control discount-input" step="0.01" min="0" value="{{ $item->discount ?? 0 }}">
                             @error("sale_items.$index.discount")
                                 <div class="text-danger">{{ $message }}</div>
                             @enderror
                         </td>
                         <td>
                             <select name="sale_items[{{ $index }}][discount_type]" class="form-control discount-type">
-                                <option value="fixed">Fixed</option>
-                                <option value="percentage">Percentage</option>
+                                <option value="fixed" {{ ($item->discount_type ?? 'fixed') == 'fixed' ? 'selected' : '' }}>Fixed</option>
+                                <option value="percentage" {{ ($item->discount_type ?? 'fixed') == 'percentage' ? 'selected' : '' }}>Percentage</option>
                             </select>
                         </td>
                         <td>
@@ -132,7 +146,7 @@
                             @enderror
                         </td>
                         <td>
-                            <input type="number" name="sale_items[0][quantity]" class="form-control quantity-input" min="1" value="1" required>
+                            <input typethicknessInput type="number" name="sale_items[0][quantity]" class="form-control quantity-input" min="1" value="1" required>
                             @error('sale_items.0.quantity')
                                 <div class="text-danger">{{ $message }}</div>
                             @enderror
@@ -213,7 +227,7 @@
                 console.log('Row set to read-only: Out of stock');
             } else {
                 quantityInput.removeAttribute('readonly');
-                unitPriceInput.setAttribute('readonly', 'readonly'); // Always read-only
+                unitPriceInput.setAttribute('readonly', 'readonly');
                 discountInput.removeAttribute('readonly');
                 discountType.removeAttribute('disabled');
                 if (!quantityInput.value) {
@@ -265,11 +279,14 @@
                 <td>
                     <select name="sale_items[${itemIndex}][product_id]" class="form-control product-select" required>
                         <option value="">Select Product</option>
-                        @forelse ($products as $product)
-                            <option value="{{ $product->id }}" data-stock="{{ optional($product->inventory)->quantity ?? 0 }}" data-unit-price="{{ $product->unit_price ?? 0 }}">{{ $product->name }} (Stock: {{ optional($product->inventory)->quantity ?? 0 }})</option>
-                        @empty
-                            <option value="">No products available</option>
-                        @endforelse
+                        ${products.map(product => `
+                            <option value="${product.id}" 
+                                    data-stock="${product.inventory?.quantity || 0}" 
+                                    data-unit-price="${product.unit_price || 0}">
+                                ${product.name} (Stock: ${product.inventory?.quantity || 0})
+                            </option>
+                        `).join('')}
+                        ${products.length === 0 ? '<option value="">No products available</option>' : ''}
                     </select>
                     <div class="text-danger stock-error"></div>
                 </td>
@@ -308,7 +325,6 @@
                 const row = e.target.closest('tr');
 
                 if (rows.length === 1) {
-                    // Reset fields for single item
                     const productSelect = row.querySelector('.product-select');
                     const quantityInput = row.querySelector('.quantity-input');
                     const unitPriceInput = row.querySelector('.unit-price');
@@ -328,7 +344,6 @@
                     toggleRowFields(row, false);
                     console.log('Single item reset');
                 } else {
-                    // Remove row for multiple items
                     row.remove();
                     console.log('Row removed');
                 }
@@ -360,7 +375,6 @@
                     console.log('Product selected - Unit Price:', unitPrice, 'Stock:', stock);
                     unitPriceInput.value = unitPrice.toFixed(2);
 
-                    // Handle stock status
                     if (stock <= 0) {
                         stockError.textContent = 'The product is out of stock.';
                         stockError.style.display = 'block';
@@ -370,7 +384,6 @@
                         stockError.style.display = 'none';
                         toggleRowFields(row, false);
 
-                        // Validate stock via AJAX
                         axios.post('{{ route("sales.check-stock") }}', {
                             product_id: productSelect.value,
                             quantity: parseInt(quantityInput.value) || 1
@@ -391,7 +404,6 @@
                     }
                 }
 
-                // Calculate subtotal (only if not out of stock)
                 if (quantityInput.value && unitPriceInput.value && !quantityInput.hasAttribute('readonly')) {
                     const baseAmount = parseInt(quantityInput.value) * parseFloat(unitPriceInput.value);
                     const discountValue = parseFloat(discountInput.value) || 0;
@@ -406,7 +418,6 @@
                     subtotalInput.value = Math.max(0, subtotal).toFixed(2);
                     console.log('Subtotal calculated:', subtotalInput.value, 'Discount Type:', discountType.value);
 
-                    // Validate quantity against stock
                     if (productSelect.value) {
                         const stock = parseInt(productSelect.selectedOptions[0].dataset.stock) || 0;
                         if (parseInt(quantityInput.value) > stock) {
@@ -424,7 +435,6 @@
             }
         });
 
-        // Prevent form submission if invalid
         document.getElementById('sale-form').addEventListener('submit', (e) => {
             if (!validateForm()) {
                 e.preventDefault();

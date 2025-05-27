@@ -198,16 +198,18 @@
                 if (type === 'discount') {
                     discountFields.addClass('show');
                     freeItemFields.removeClass('show');
-                    $('#discount_type, #discount_value').prop('required', true);
-                    $('#free_item_id').prop('required', false);
+                    $('#discount_type, #discount_value').prop('required', true).prop('disabled', false);
+                    $('#free_item_id').prop('required', false).prop('disabled', true).val('');
                 } else if (type === 'buy_get_free') {
                     discountFields.removeClass('show');
                     freeItemFields.addClass('show');
-                    $('#discount_type, #discount_value').prop('required', false);
-                    $('#free_item_id').prop('required', true);
+                    $('#discount_type, #discount_value').prop('required', false).prop('disabled', true).val('');
+                    $('#free_item_id').prop('required', true).prop('disabled', false);
                 } else {
                     discountFields.removeClass('show');
                     freeItemFields.removeClass('show');
+                    $('#discount_type, #discount_value').prop('required', false).prop('disabled', true).val('');
+                    $('#free_item_id').prop('required', false).prop('disabled', true).val('');
                 }
             }
 
@@ -217,6 +219,11 @@
 
             // Initialize field visibility
             toggleFields($('#type').val());
+
+            // Clear disabled fields on form submission
+            $('form').on('submit', function () {
+                $(':disabled').val('');
+            });
         });
     </script>
 @endpush

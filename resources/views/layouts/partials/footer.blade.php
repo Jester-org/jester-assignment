@@ -1,5 +1,5 @@
 <footer class="footer">
-    <p>© {{ date('Y') }} {{ session()->get('name', 'Guest') }}. All rights reserved.</p>
+    <p>© {{ date('Y') }} {{ session()->get('NAME', 'Guest') }}. All rights reserved.</p>
 </footer>
 
 <style>

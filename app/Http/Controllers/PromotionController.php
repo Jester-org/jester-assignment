@@ -28,7 +28,7 @@ class PromotionController extends Controller
         $validated = $request->validate([
             'type' => 'required|in:discount,buy_get_free',
             'discount_type' => 'required_if:type,discount|in:fixed,percentage|nullable',
-            'discount_value' => 'required_if:type,discount|numeric|min:0',
+            'discount_value' => 'required_if:type,discount|nullable|numeric|min:0',
             'free_item_id' => 'required_if:type,buy_get_free|exists:products,id|nullable',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
@@ -38,17 +38,17 @@ class PromotionController extends Controller
             'categories' => 'array|nullable',
             'categories.*' => 'exists:categories,id',
         ]);
-
+    
         DB::transaction(function () use ($validated) {
             $promotion = Promotion::create($validated);
-
+    
             if (!empty($validated['products'])) {
                 $promotion->products()->sync($validated['products']);
             }
             if (!empty($validated['categories'])) {
                 $promotion->categories()->sync($validated['categories']);
             }
-
+    
             if ($promotion->is_active && $promotion->type === 'discount') {
                 foreach ($promotion->products as $product) {
                     $discountedPrice = $product->calculateDiscountedPrice();
@@ -63,10 +63,10 @@ class PromotionController extends Controller
                     }
                 }
             }
-
+    
             Log::info('Promotion created', ['id' => $promotion->id]);
         });
-
+    
         return redirect()->route('promotions.index')->with('success', 'Promotion created successfully.');
     }
 

@@ -1,7 +1,7 @@
 <aside class="sidebar">
-    <div class="sidebar-brand"><a href="/home">{{ session()->get('name', 'Guest') }}</a></div>
+    <div class="sidebar-brand"><a href="/home">{{ session()->get('NAME', 'Guest') }}</a></div>
     <ul>
-        <li>
+        <li class="{{ Request::is('home') || Request::is('reports*') || Request::is('audit-logs*') ? 'active-parent' : '' }}">
             <a href="#">
                 <i class="fas fa-tachometer-alt"></i> Dashboard
                 <i class="fas fa-chevron-down dropdown-icon"></i>
@@ -12,7 +12,8 @@
                 <li><a href="/audit-logs" class="{{ Request::is('audit-logs*') ? 'active' : '' }}"><i class="fas fa-file-alt"></i> Audit Logs</a></li>
             </ul>
         </li>
-        <li>
+
+        <li class="{{ Request::is('users*') || Request::is('roles*') || Request::is('permissions*') || Request::is('customers*') ? 'active-parent' : '' }}">
             <a href="#">
                 <i class="fas fa-users"></i> Users & Roles
                 <i class="fas fa-chevron-down dropdown-icon"></i>
@@ -24,7 +25,8 @@
                 <li><a href="/customers" class="{{ Request::is('customers*') ? 'active' : '' }}"><i class="fas fa-user-friends"></i> Customers</a></li>
             </ul>
         </li>
-        <li>
+
+        <li class="{{ Request::is('products*') || Request::is('categories*') || Request::is('inventories*') || Request::is('inventory-adjustments*') || Request::is('batches*') || Request::is('expiry-dates*') ? 'active-parent' : '' }}">
             <a href="#">
                 <i class="fas fa-shop"></i> Inventory Management
                 <i class="fas fa-chevron-down dropdown-icon"></i>
@@ -38,7 +40,8 @@
                 <li><a href="/expiry-dates" class="{{ Request::is('expiry-dates*') ? 'active' : '' }}"><i class="fas fa-clock"></i> Expiry Dates</a></li>
             </ul>
         </li>
-        <li>
+
+        <li class="{{ Request::is('sales*') || Request::is('sale-items*') || Request::is('purchases*') || Request::is('purchase-items*') || Request::is('suppliers*') || Request::is('promotions*') ? 'active-parent' : '' }}">
             <a href="#">
                 <i class="fas fa-shopping-cart"></i> Sales & Purchases
                 <i class="fas fa-chevron-down dropdown-icon"></i>
@@ -52,7 +55,8 @@
                 <li><a href="/promotions" class="{{ Request::is('promotions*') ? 'active' : '' }}"><i class="fas fa-tag"></i> Promotions</a></li>
             </ul>
         </li>
-        <li>
+
+        <li class="{{ Request::is('transactions*') || Request::is('payments*') || Request::is('payment-methods*') || Request::is('tax-rates*') ? 'active-parent' : '' }}">
             <a href="#">
                 <i class="fas fa-money-bill"></i> Payments
                 <i class="fas fa-chevron-down dropdown-icon"></i>
@@ -64,7 +68,8 @@
                 <li><a href="/tax-rates" class="{{ Request::is('tax-rates*') ? 'active' : '' }}"><i class="fas fa-percentage"></i> Tax Rates</a></li>
             </ul>
         </li>
-        <li>
+
+        <li class="{{ Request::is('attendances*') || Request::is('leaves*') || Request::is('leave-types*') ? 'active-parent' : '' }}">
             <a href="#">
                 <i class="fas fa-calendar-alt"></i> HR Management
                 <i class="fas fa-chevron-down dropdown-icon"></i>
@@ -77,6 +82,13 @@
         </li>
     </ul>
 </aside>
+
+<style>
+    .sidebar ul li.active-parent > a {
+        border-left: 4px solid #0f0;
+        background: rgba(255, 255, 255, 0.05);
+    }
+</style>
 
 <style>
    /* Sidebar Styles */
@@ -92,6 +104,13 @@
         z-index: 2000; /* Match mobile z-index */
         transform: translateX(-100%);
         overflow-y: auto;
+
+        /* hide scrollbar on Webkit browsers (Chrome, Safari) */
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none;  /* Internet Explorer 10+ */
+    }
+    .sidebar::-webkit-scrollbar {
+        display: none; /* Chrome, Safari, Opera */
     }
 
     .sidebar.expanded {

@@ -13,7 +13,7 @@
                             {{ session('status') }}
                         </div>
                     @endif
-                    {{ __('You are logged in!') }} {{ session()->get('name', 'Guest') }}
+                    {{ session('NAME') ? "Welcome, " . session('NAME') . "!" : '' }}
                 </div>
             </div>
         </div>

@@ -59,10 +59,9 @@
         <form action="{{ route('purchases.store') }}" method="POST" id="purchase-form" class="bg-white p-6 rounded-lg shadow-lg">
             @csrf
 
-            <!-- Supplier -->
             <div class="mb-6">
                 <label for="supplier_id" class="block text-sm font-medium text-gray-700 mb-2">Supplier</label>
-                <select name="supplier_id" id="supplier_id" class="w-full" required>
+                <select name="supplier_id" id="supplier_id" class="w-full select2" required>
                     <option value="">Select Supplier</option>
                     @forelse ($suppliers as $supplier)
                         <option value="{{ $supplier->id }}">{{ $supplier->name }}</option>
@@ -75,10 +74,9 @@
                 @enderror
             </div>
 
-            <!-- User -->
             <div class="mb-6">
                 <label for="user_id" class="block text-sm font-medium text-gray-700 mb-2">User</label>
-                <select name="user_id" id="user_id" class="w-full" required>
+                <select name="user_id" id="user_id" class="w-full select2" required>
                     <option value="">Select User</option>
                     @forelse ($users as $user)
                         <option value="{{ $user->id }}">{{ $user->name }}</option>
@@ -91,7 +89,21 @@
                 @enderror
             </div>
 
-            <!-- Total Amount -->
+            <div class="mb-6">
+                <label for="payment_method_id" class="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
+                <select name="payment_method_id" id="payment_method_id" class="w-full select2">
+                    <option value="">Select Payment Method</option>
+                    @forelse ($paymentMethods as $paymentMethod)
+                        <option value="{{ $paymentMethod->id }}">{{ $paymentMethod->name }}</option>
+                    @empty
+                        <option value="">No payment methods available</option>
+                    @endforelse
+                </select>
+                @error('payment_method_id')
+                    <span class="text-red-500 text-sm mt-1">{{ $message }}</span>
+                @enderror
+            </div>
+
             <div class="mb-6">
                 <label for="total_amount" class="block text-sm font-medium text-gray-700 mb-2">Total Amount</label>
                 <input type="number" name="total_amount" id="total_amount" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" step="0.01" min="0" readonly>
@@ -100,7 +112,6 @@
                 @enderror
             </div>
 
-            <!-- Purchase Date -->
             <div class="mb-6">
                 <label for="purchase_date" class="block text-sm font-medium text-gray-700 mb-2">Purchase Date</label>
                 <input type="date" name="purchase_date" id="purchase_date" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
@@ -109,10 +120,9 @@
                 @enderror
             </div>
 
-            <!-- Status -->
             <div class="mb-6">
                 <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                <select name="status" id="status" class="w-full" required>
+                <select name="status" id="status" class="w-full select2" required>
                     <option value="pending">Pending</option>
                     <option value="completed">Completed</option>
                     <option value="cancelled">Cancelled</option>
@@ -122,16 +132,15 @@
                 @enderror
             </div>
 
-            <!-- Purchase Items -->
-            <h3 class="text-xl font-semibold text-gray-900 mb-4">Purchase Items</h3>
-            <table class="mb-6" id="purchase-items-table">
+            <h2 class="text-2xl font-semibold text-gray-900 mb-4">Purchase Items</h2>
+            <table class="mb-6">
                 <thead>
                     <tr>
                         <th>Product</th>
                         <th>Quantity</th>
+                        <th>Unit Price</th>
                         <th>Apply Tax</th>
                         <th>Discount (%)</th>
-                        <th>Unit Price</th>
                         <th>Subtotal</th>
                         <th>Action</th>
                     </tr>
@@ -139,10 +148,13 @@
                 <tbody id="purchase-items">
                     <tr class="purchase-item-row">
                         <td>
-                            <select name="purchase_items[0][product_id]" class="w-full product-select" required>
+                            <select name="purchase_items[0][product_id]" class="w-full product-select select2" required>
                                 <option value="">Select Product</option>
                                 @forelse ($products as $product)
-                                    <option value="{{ $product->id }}" data-base-price="{{ $product->base_price ?? 0 }}" data-unit-price="{{ $product->unit_price ?? 0 }}" data-tax-rate="{{ $product->taxRate->rate ?? 0 }}">{{ $product->name }} (${{ number_format($product->base_price ?? 0, 2) }})</option>
+                                    <option value="{{ $product->id }}"
+                                            data-unit-price="{{ $product->unit_price ?? 0 }}"
+                                            data-base-price="{{ $product->base_price ?? 0 }}"
+                                            data-tax-rate="{{ optional($product->taxRate)->rate ?? 0 }}">{{ $product->name }}</option>
                                 @empty
                                     <option value="">No products available</option>
                                 @endforelse
@@ -152,8 +164,14 @@
                             @enderror
                         </td>
                         <td>
-                            <input type="number" name="purchase_items[0][quantity]" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 quantity-input" min="1" value="1" required>
+                            <input type="number" name="purchase_items[0][quantity]" class="w-full quantity-input" min="1" value="1" required>
                             @error('purchase_items.0.quantity')
+                                <span class="text-red-500 text-sm mt-1">{{ $message }}</span>
+                            @enderror
+                        </td>
+                        <td>
+                            <input type="number" name="purchase_items[0][unit_price]" class="w-full unit-price" step="0.01" min="0" readonly required>
+                            @error('purchase_items.0.unit_price')
                                 <span class="text-red-500 text-sm mt-1">{{ $message }}</span>
                             @enderror
                         </td>
@@ -161,179 +179,228 @@
                             <input type="checkbox" name="purchase_items[0][apply_tax]" class="apply-tax" value="1">
                         </td>
                         <td>
-                            <input type="number" name="purchase_items[0][discount]" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 discount-input" min="0" max="100" step="0.01" value="0">
+                            <input type="number" name="purchase_items[0][discount]" class="w-full discount-input" step="0.01" min="0" max="100" value="0">
                             @error('purchase_items.0.discount')
                                 <span class="text-red-500 text-sm mt-1">{{ $message }}</span>
                             @enderror
                         </td>
                         <td>
-                            <input type="number" name="purchase_items[0][unit_price]" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 unit-price" step="0.01" min="0" readonly required>
-                            @error('purchase_items.0.unit_price')
-                                <span class="text-red-500 text-sm mt-1">{{ $message }}</span>
-                            @enderror
+                            <input type="number" class="w-full subtotal" step="0.01" readonly>
                         </td>
                         <td>
-                            <input type="number" class="w-full border-gray-300 rounded-md shadow-sm subtotal" step="0.01" readonly>
-                        </td>
-                        <td>
-                            <button type="button" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 remove-item">Remove</button>
+                            <button type="button" class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 remove-item">Remove</button>
                         </td>
                     </tr>
                 </tbody>
             </table>
 
-            <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 mb-6" id="add-item">Add Item</button>
+            <button type="button" id="add-item" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 mb-6">Add Item</button>
 
             <div>
-                <button type="submit" class="px-6 py-2 bg-green-600 text-white font-semibold rounded-md shadow hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2" id="submit-purchase">Create Purchase</button>
+                <button type="submit" id="submit-purchase" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600" disabled>Create Purchase</button>
             </div>
         </form>
     </div>
 @endsection
 
 @push('scripts')
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js"></script>
     <script>
+        // Fallback for jQuery and Select2 if CDN fails
+        window.jQuery || document.write('<script src="/js/jquery-3.6.0.min.js"><\/script>');
+        window.Select2 || document.write('<script src="/js/select2.min.js"><\/script>');
+
         $(document).ready(function () {
-            // Initialize Select2 for dropdowns
-            $('#supplier_id, #user_id, #status, .product-select').select2({
-                placeholder: $(this).find('option:first').text(),
-                allowClear: true,
-                width: '100%',
-            });
+            // Check if jQuery and Select2 are loaded
+            if (typeof $.fn.select2 === 'undefined') {
+                console.error('Select2 is not loaded. Check CDN or local fallback.');
+                return;
+            }
+
+            // Initialize Select2 for all select elements
+            try {
+                $('.select2').select2({
+                    width: '100%',
+                    placeholder: 'Select an option',
+                    allowClear: true,
+                }).trigger('change');
+                console.log('Select2 initialized for existing elements');
+            } catch (e) {
+                console.error('Select2 initialization failed:', e);
+            }
 
             let itemIndex = 1;
 
+            // Update total amount
             function updateTotalAmount() {
-                const subtotals = $('.subtotal');
                 let total = 0;
-                subtotals.each(function () {
+                $('.subtotal').each(function () {
                     total += parseFloat($(this).val()) || 0;
                 });
                 $('#total_amount').val(total.toFixed(2));
+                validateForm();
             }
 
-            function calculateRow(row) {
-                const productSelect = row.find('.product-select');
-                const quantityInput = row.find('.quantity-input');
-                const applyTax = row.find('.apply-tax').is(':checked');
-                const discountInput = row.find('.discount-input');
-                const unitPriceInput = row.find('.unit-price');
-                const subtotalInput = row.find('.subtotal');
+            // Validate form
+            function validateForm() {
+                let isValid = true;
+                let errors = [];
 
-                if (productSelect.val()) {
-                    const basePrice = parseFloat(productSelect.find(':selected').data('base-price')) || 0;
-                    const unitPriceWithTax = parseFloat(productSelect.find(':selected').data('unit-price')) || 0;
-                    let unitPrice = applyTax ? unitPriceWithTax : basePrice;
+                // Check main form fields
+                if (!$('#supplier_id').val()) {
+                    isValid = false;
+                    errors.push('Supplier is required.');
+                }
+                if (!$('#user_id').val()) {
+                    isValid = false;
+                    errors.push('User is required.');
+                }
+                if (!$('#purchase_date').val()) {
+                    isValid = false;
+                    errors.push('Purchase date is required.');
+                }
+                if (!$('#status').val()) {
+                    isValid = false;
+                    errors.push('Status is required.');
+                }
 
-                    // Apply discount
-                    const discount = parseFloat(discountInput.val()) || 0;
-                    if (discount > 0) {
-                        unitPrice = unitPrice * (1 - discount / 100);
+                // Check purchase items
+                $('.purchase-item-row').each(function (index) {
+                    const productSelect = $(this).find('.product-select');
+                    const quantityInput = $(this).find('.quantity-input');
+                    if (!productSelect.val()) {
+                        isValid = false;
+                        errors.push(`Product for item ${index + 1} is required.`);
                     }
-
-                    unitPriceInput.val(unitPrice.toFixed(2));
-
-                    // Calculate subtotal
-                    if (quantityInput.val()) {
-                        const quantity = parseInt(quantityInput.val()) || 1;
-                        const subtotal = quantity * unitPrice;
-                        subtotalInput.val(Math.max(0, subtotal).toFixed(2));
+                    if (!quantityInput.val() || parseInt(quantityInput.val()) <= 0) {
+                        isValid = false;
+                        errors.push(`Quantity for item ${index + 1} must be greater than 0.`);
                     }
+                });
+
+                // Log validation result
+                if (!isValid) {
+                    console.log('Validation failed:', errors);
+                } else {
+                    console.log('Validation passed');
                 }
 
-                updateTotalAmount();
+                $('#submit-purchase').prop('disabled', !isValid);
+                return isValid;
             }
 
-            function toggleRowFields(row) {
-                const quantityInput = row.find('.quantity-input');
-                const unitPriceInput = row.find('.unit-price');
-                const subtotalInput = row.find('.subtotal');
-                const discountInput = row.find('.discount-input');
-
-                quantityInput.removeAttr('readonly');
-                unitPriceInput.attr('readonly', 'readonly');
-                discountInput.removeAttr('readonly');
-                if (!quantityInput.val()) {
-                    quantityInput.val(1);
-                }
-                if (!discountInput.val()) {
-                    discountInput.val(0);
-                }
-            }
-
-            $('#add-item').on('click', function () {
-                const tbody = $('#purchase-items');
-                const newRow = $(`
+            // Add new item row
+            $('#add-item').click(function () {
+                const newRow = `
                     <tr class="purchase-item-row">
                         <td>
-                            <select name="purchase_items[${itemIndex}][product_id]" class="w-full product-select" required>
+                            <select name="purchase_items[${itemIndex}][product_id]" class="w-full product-select select2" required>
                                 <option value="">Select Product</option>
                                 @forelse ($products as $product)
-                                    <option value="{{ $product->id }}" data-base-price="{{ $product->base_price ?? 0 }}" data-unit-price="{{ $product->unit_price ?? 0 }}" data-tax-rate="{{ $product->taxRate->rate ?? 0 }}">{{ $product->name }} (${{ number_format($product->base_price ?? 0, 2) }})</option>
+                                    <option value="{{ $product->id }}"
+                                            data-unit-price="{{ $product->unit_price ?? 0 }}"
+                                            data-base-price="{{ $product->base_price ?? 0 }}"
+                                            data-tax-rate="{{ optional($product->taxRate)->rate ?? 0 }}">{{ $product->name }}</option>
                                 @empty
                                     <option value="">No products available</option>
                                 @endforelse
                             </select>
                         </td>
                         <td>
-                            <input type="number" name="purchase_items[${itemIndex}][quantity]" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 quantity-input" min="1" value="1" required>
+                            <input type="number" name="purchase_items[${itemIndex}][quantity]" class="w-full quantity-input" min="1" value="1" required>
+                        </td>
+                        <td>
+                            <input type="number" name="purchase_items[${itemIndex}][unit_price]" class="w-full unit-price" step="0.01" min="0" readonly required>
                         </td>
                         <td>
                             <input type="checkbox" name="purchase_items[${itemIndex}][apply_tax]" class="apply-tax" value="1">
                         </td>
                         <td>
-                            <input type="number" name="purchase_items[${itemIndex}][discount]" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 discount-input" min="0" max="100" step="0.01" value="0">
+                            <input type="number" name="purchase_items[${itemIndex}][discount]" class="w-full discount-input" step="0.01" min="0" max="100" value="0">
                         </td>
                         <td>
-                            <input type="number" name="purchase_items[${itemIndex}][unit_price]" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 unit-price" step="0.01" min="0" readonly required>
+                            <input type="number" class="w-full subtotal" step="0.01" readonly>
                         </td>
                         <td>
-                            <input type="number" class="w-full border-gray-300 rounded-md shadow-sm subtotal" step="0.01" readonly />
-                        </td>
-                        <td>
-                            <button type="button" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 remove-item">Remove</button>
+                            <button type="button" class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 remove-item">Remove</button>
                         </td>
                     </tr>
-                `);
-                tbody.append(newRow);
-                newRow.find('.product-select').select2({
-                    placeholder: 'Select Product',
-                    allowClear: true,
-                    width: '100%',
-                });
+                `;
+                $('#purchase-items').append(newRow);
+                try {
+                    $(`select[name="purchase_items[${itemIndex}][product_id]"]`).select2({
+                        width: '100%',
+                        placeholder: 'Select Product',
+                        allowClear: true,
+                    }).trigger('change');
+                    console.log(`Select2 initialized for new item ${itemIndex}`);
+                } catch (e) {
+                    console.error(`Select2 initialization failed for new item ${itemIndex}:`, e);
+                }
                 itemIndex++;
                 updateTotalAmount();
             });
 
+            // Remove item row
             $(document).on('click', '.remove-item', function () {
-                const rows = $('.purchase-item-row');
                 const row = $(this).closest('tr');
-
-                if (rows.length === 1) {
-                    // Reset fields for single item
+                if ($('.purchase-item-row').length === 1) {
                     row.find('.product-select').val('').trigger('change');
                     row.find('.quantity-input').val('1');
+                    row.find('.unit-price').val('');
                     row.find('.apply-tax').prop('checked', false);
                     row.find('.discount-input').val('0');
-                    row.find('.unit-price').val('');
                     row.find('.subtotal').val('');
-                    toggleRowFields(row);
                 } else {
-                    // Remove row for multiple items
                     row.remove();
                 }
                 updateTotalAmount();
             });
 
+            // Update row calculations
             $(document).on('change', '.product-select, .quantity-input, .apply-tax, .discount-input', function () {
                 const row = $(this).closest('tr');
-                calculateRow(row);
+                const productSelect = row.find('.product-select');
+                const quantityInput = row.find('.quantity-input');
+                const unitPriceInput = row.find('.unit-price');
+                const applyTax = row.find('.apply-tax');
+                const discountInput = row.find('.discount-input');
+                const subtotalInput = row.find('.subtotal');
+
+                if (productSelect.val()) {
+                    const selectedOption = productSelect.find('option:selected');
+                    const basePrice = parseFloat(selectedOption.data('base-price')) || 0;
+                    const unitPrice = parseFloat(selectedOption.data('unit-price')) || 0;
+                    const price = applyTax.is(':checked') ? unitPrice : basePrice;
+                    unitPriceInput.val(price.toFixed(2));
+
+                    if (quantityInput.val()) {
+                        let subtotal = parseInt(quantityInput.val()) * price;
+                        const discount = parseFloat(discountInput.val()) || 0;
+                        if (discount > 0) {
+                            subtotal = subtotal * (1 - discount / 100);
+                        }
+                        subtotalInput.val(Math.max(0, subtotal).toFixed(2));
+                    }
+                } else {
+                    unitPriceInput.val('');
+                    subtotalInput.val('');
+                }
+                updateTotalAmount();
             });
 
-            // Initialize total amount
-            updateTotalAmount();
+            // Form submission validation
+            $('#purchase-form').submit(function (e) {
+                if (!validateForm()) {
+                    e.preventDefault();
+                    alert('Please fill in all required fields correctly:\n' + errors.join('\n'));
+                }
+            });
+
+            // Initial validation
+            validateForm();
         });
     </script>
 @endpush
